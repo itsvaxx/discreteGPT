@@ -11,3 +11,12 @@
 2. Open chrome. Click the three dots in the top right corner -> Extensions -> Manage extensions.
 3. Click "Load unpacked" and select the folder you downloaded in step 1. Make sure to enable it.
 4. Done!
+
+## How to use
+1. To start the script press Ctrl + Shift. You'll know it's working correctly if you see a small dot next to the title of the webpage.
+2. ![localImage](images/dot.png)
+3. Type the prompt that will be asked to the Ai (the title of the webpage should act as your input).
+4. Once you are done, press Ctrl + Alt the script will send an API request to the OpenAi endpoint using your prompt.
+5. If everything goes well you should see the response to your prompt fill the title field, just as your input did not too long ago.
+
+Note that the responses are kept intentionally brief, as any responses longer than 20+ characters will be too long to fit in the title. 
