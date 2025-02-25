@@ -1,0 +1,21 @@
+{
+    "name": "GPT4o-mini Exam",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": [
+      "storage",
+      "tabs",
+      "activeTab",
+      "scripting",
+      "clipboardRead",
+      "clipboardWrite"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["src/discrete_gpt.js", "src/api_key.js"],
+        "type": "module"
+      }
+    ]
+
+}
