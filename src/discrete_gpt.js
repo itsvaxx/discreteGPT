@@ -1,7 +1,7 @@
 var running = false;
 var request_string = "";
 var response_string = "";
-const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789,.!_§¶/+*- "
+const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789,.!_§¶/+*- ";
 var original_title = document.title;
 var notificationBadge = null;
 var popupDiv = null;
@@ -9,7 +9,7 @@ var popupDiv = null;
 async function make_request(input) {
     try {
         const prompt = "Respond to the following with only the answer, no explanation: " + input;
-        
+
         document.title = "⬞ Processing...";
         if (notificationBadge) notificationBadge.style.display = 'none';
         if (popupDiv) popupDiv.style.display = 'none';
@@ -22,9 +22,7 @@ async function make_request(input) {
             },
             body: JSON.stringify({
                 model: "gpt-4o",
-                messages: [
-                    { role: "user", content: prompt }
-                ]
+                messages: [{ role: "user", content: prompt }]
             })
         });
 
@@ -37,8 +35,7 @@ async function make_request(input) {
             notificationBadge.style.display = 'block';
             notificationBadge.style.backgroundColor = '#4CAF50';
             popupDiv.textContent = response_string;
-            
-            // Auto-hide notification after 30 seconds
+
             setTimeout(() => {
                 notificationBadge.style.display = 'none';
                 popupDiv.style.display = 'none';
@@ -59,7 +56,6 @@ async function make_request(input) {
 }
 
 function initNotificationBadge() {
-    // Create the notification badge
     notificationBadge = document.createElement('div');
     notificationBadge.id = 'gpt-notification';
     notificationBadge.style.position = 'fixed';
@@ -74,8 +70,7 @@ function initNotificationBadge() {
     notificationBadge.style.cursor = 'pointer';
     notificationBadge.title = 'Click to view response';
     document.body.appendChild(notificationBadge);
-    
-    // Create the popup div
+
     popupDiv = document.createElement('div');
     popupDiv.id = 'gpt-popup';
     popupDiv.style.display = 'none';
@@ -91,19 +86,16 @@ function initNotificationBadge() {
     popupDiv.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
     popupDiv.style.zIndex = '10000';
     document.body.appendChild(popupDiv);
-    
-    // Add click handler for the badge
+
     notificationBadge.addEventListener('click', function(e) {
         e.stopPropagation();
         popupDiv.style.display = popupDiv.style.display === 'none' ? 'block' : 'none';
     });
-    
-    // Close popup when clicking anywhere else
+
     document.addEventListener('click', function() {
         popupDiv.style.display = 'none';
     });
-    
-    // Prevent popup from closing when clicking inside it
+
     popupDiv.addEventListener('click', function(e) {
         e.stopPropagation();
     });
@@ -117,14 +109,12 @@ function KeyPress(e) {
         navigator.clipboard.readText().then((clipText) => (make_request(clipText)));
     }
 
-    // Ctrl + Shift to start a request
     if (evtobj.keyCode == 16 && evtobj.ctrlKey) {
         request_string = "";
         running = true;
         document.title = "⬞ Capturing input...";
     }
 
-    // Ctrl + Alt to submit the request
     if (evtobj.keyCode == 18 && evtobj.ctrlKey) {
         running = false;
 
@@ -136,7 +126,6 @@ function KeyPress(e) {
         }
     }
 
-    // Backspace character deletion
     if (evtobj.keyCode == 8 && request_string.length != 0) {
         request_string = request_string.slice(0, -1);
     }
@@ -145,7 +134,6 @@ function KeyPress(e) {
 initNotificationBadge();
 document.onkeydown = KeyPress;
 
-// Checks if keystrokes are valid characters and appends them to the prompt
 document.addEventListener("keydown", function(event) {
     if (running) {
         if (charset.includes(event.key)) {
@@ -158,4 +146,33 @@ document.addEventListener("keydown", function(event) {
             document.title = "⬞ " + original_title;
         }
     }
+});
+
+// New: Click a question to auto-extract and send to GPT
+document.addEventListener("click", function(event) {
+    if (!running) return;
+
+    const questionDiv = event.target.closest("div[id*='_question_text']");
+    if (!questionDiv) return;
+
+    const questionText = questionDiv.textContent.trim();
+    const questionIdMatch = questionDiv.id.match(/question_(\d+)_question_text/);
+    if (!questionIdMatch) return;
+
+    const questionId = questionIdMatch[1];
+    const answersContainer = questionDiv.parentElement.querySelector(".answers");
+    if (!answersContainer) return;
+
+    const answerLabels = answersContainer.querySelectorAll(`div[id^='question_${questionId}_answer_']`);
+    if (!answerLabels.length) return;
+
+    const formattedAnswers = Array.from(answerLabels).map((labelDiv, index) => {
+        const letter = String.fromCharCode(65 + index); // A, B, C, ...
+        return `${letter}) ${labelDiv.textContent.trim()}`;
+    });
+
+    const fullPrompt = `Q: ${questionText}\n${formattedAnswers.join('\n')}`;
+
+    make_request(fullPrompt);
+    running = false;
 });
